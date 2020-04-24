@@ -1,8 +1,7 @@
 const app = require("./backend/app");
 const debug = require("debug")("node-angular");
 const http = require("http");
-//wg59b1p34430rtuZ
-//mongodb+srv://sharki:<password>@cluster0-xaujr.mongodb.net/test?retryWrites=true&w=majority
+
 const normalizePort = val => {
   var port = parseInt(val, 10);
 
