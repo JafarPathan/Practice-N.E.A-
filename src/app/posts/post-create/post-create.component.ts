@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { NgForm } from '@angular/forms';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
 
 import { Post } from '../post.module';
 import { PostService } from '../post.service';
@@ -16,31 +16,42 @@ export class PostCreateComponent implements OnInit{
   mode = 'create';
   postId: string;
   post;
+  form: FormGroup;
 
   constructor(private postService: PostService, public route: ActivatedRoute){}
 
   ngOnInit(){
+    this.form = new FormGroup({
+      title: new FormControl(null, {validators: [Validators.required, Validators.minLength(3)]}),
+      content: new FormControl(null, {validators: [Validators.required]})
+    })
     this.route.paramMap.subscribe((paramMap:ParamMap)=>{
       if(paramMap.has('postId')){
         this.mode='edit';
         this.postId = paramMap.get('postId');
-        this.post = this.postService.getPost(this.postId);
-
+        this.postService.getPost(this.postId).subscribe(postData => {
+          console.log("tuka")
+          this.post = {id: postData._id, title: postData.title, content: postData.content}
+          this.form.setValue({
+            title: this.post.title,
+            content: this.post.content
+          })
+        });
       }else{
         this.mode= 'create';
       }
     })
   }
 
-  onAddPost(form:NgForm){
-    if(form.invalid){
+  onAddPost(){
+    if(this.form.invalid){
       return
     }
     if(this.mode === 'create'){
-    this.postService.addPost(form.value.title, form.value.content)
+    this.postService.addPost(this.form.value.title, this.form.value.content)
     }else{
-      this.postService.updatePost(this.postId, form.value.title, form.value.content)
+      this.postService.updatePost(this.postId, this.form.value.title, this.form.value.content)
     }
-    form.resetForm();
+    this.form.reset();
   }
 }
