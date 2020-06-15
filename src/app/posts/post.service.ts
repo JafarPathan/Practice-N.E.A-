@@ -27,7 +27,8 @@ export class PostService {
         return {
           title: post.title,
           content: post.content,
-          id: post._id
+          id: post._id,
+          imagePath: post.imagePath
         }
       })
     }))
@@ -56,11 +57,19 @@ export class PostService {
 
   }
 
-  addPost(title: string, content: string){
-    const post: any = {id:null, title: title, content: content};
-    this.http.post<Post>('http://localhost:3000/api/post', post)
+  addPost(title: string, content: string, image: File){
+    const postData = new FormData();
+    postData.append("title", title)
+    postData.append("content", content)
+    postData.append("image", image)
+    this.http.post<Post>('http://localhost:3000/api/post', postData)
       .subscribe((responeData) =>{
-        console.log("message");
+        const post :Post = {
+          id: responeData.id,
+          title: title,
+          content:content,
+          imagePath: responeData.imagePath
+        }
         this.posts.push(post)
         console.log(this.posts)
         this.postUpdated.next(this.posts);
@@ -70,12 +79,36 @@ export class PostService {
 
   }
 
-  updatePost(id: string, title, content){
-    const post = {id: id, title: title , content: content};
-    this.http.put<any>('http://localhost:3000/api/post/' + id, post)
+  updatePost(id: string, title: string, content: string, image: any){
+    let postData;
+    if (typeof(image) === 'object' ){
+      console.log(typeof(image))
+      postData = new FormData();
+      postData.append("id", id);
+      postData.append("title", title);
+      postData.append("content", content);
+      postData.append("image", image, title);
+
+    }else{
+      console.log(typeof(image))
+      postData = {
+        id: id,
+        title: title,
+        content: content,
+        imagePath: image
+      };
+    }
+
+    this.http.put<any>('http://localhost:3000/api/post/' + id, postData)
       .subscribe(response =>{
         const updatedPosts = [...this.posts];
-        const oldPostIndex = updatedPosts.findIndex(p => p.id === post.id)
+        const oldPostIndex = updatedPosts.findIndex(p => p.id === id)
+        const post = {
+          id: id,
+        title: title,
+        content: content,
+        imagePath: image
+        }
         updatedPosts[oldPostIndex] = post;
         this.posts = updatedPosts;
         this.postUpdated.next(this.posts)
